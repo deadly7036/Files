@@ -36,8 +36,8 @@ app.post("/login",async(req,res)=>{
   });
   if(user.password == password){
     res.render("secrets.ejs");
-  } else(err) 
-    console.log(err)
+  } else
+    console.log("wrong password");
   
 })
 
