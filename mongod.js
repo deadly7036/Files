@@ -5,10 +5,10 @@ mongoose.connect("mongodb+srv://:@cluster0.iezdyjg.mongodb.net/YouTube?retryWrit
 
 const userSchema = new mongoose.Schema({
   email: {
-    type: [String, Number]
+    type:String
   },
   password: {
-    type: [String, Number]
+    type:String
   }
 });
 

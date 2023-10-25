@@ -2,8 +2,9 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt");
 const User_ = require("./mongod.js")
-const md5 = require("md5")
+const saltRounds = 1;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
@@ -20,28 +21,34 @@ app.get("/login", (req, res) => {
 })
 
 // level 1 
-app.post("/register", async (req, res) => {
-  const user = new User_({
-    email: req.body.username,
-    password: md5(req.body.password)
+app.post("/register", (req, res) => {
+  bcrypt.hash(req.body.password, saltRounds, async function(err, hash) {
+    if (err) return res.send(err)
+    const user = new User_({
+      email: req.body.username,
+      password: hash
+    });
+    await user.save();
+    res.render("secrets.ejs")
   });
-  await user.save();
-  res.render("secrets.ejs")
+
+});
+app.post("/login",async(req,res)=>{
+  
+    const username = req.body.username;
+    const password = req.body.password;
+    const user = await User_.findOne({email:username});
+bcrypt.compare(password,user.password, function(err, result) {
+    if(result == true){
+      res.render("secrets.ejs");
+      } if(err) 
+    console.log(err)
+});
+   
 });
 
-app.post("/login", async (req, res) => {
-  const userName = req.body.username;
-  const password = md5(req.body.password);
-  const user = await User_.findOne({
-    email: userName
-  });
-  if (user.password == password) {
-    res.render("secrets.ejs");
-  } else
-    console.log("wrong password");
 
-})
-
+  
 
 
 

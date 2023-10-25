@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.0.6",
+    "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "ej": "^1.0.4",
     "ejs": "^3.1.9",
