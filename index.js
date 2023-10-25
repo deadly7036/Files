@@ -3,45 +3,46 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const User_ = require("./mongod.js")
-app.use(bodyParser.urlencoded({extended: true}));
+const md5 = require("md5")
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 ;
 
-app.get("/",(req,res)=>{
+app.get("/", (req, res) => {
   res.render("home.ejs")
 })
- app.get("/register",(req,res)=>{
+app.get("/register", (req, res) => {
   res.render("register.ejs")
 })
-  app.get("/login",(req,res)=>{
+app.get("/login", (req, res) => {
   res.render("login.ejs")
 })
 
 // level 1 
-app.post("/register",async(req,res)=>{
+app.post("/register", async (req, res) => {
   const user = new User_({
-     email:req.body.username,
-     password:req.body.password
+    email: req.body.username,
+    password: md5(req.body.password)
   });
   await user.save();
   res.render("secrets.ejs")
 });
 
-app.post("/login",async(req,res)=>{
+app.post("/login", async (req, res) => {
   const userName = req.body.username;
-  const password = req.body.password;
+  const password = md5(req.body.password);
   const user = await User_.findOne({
-    email:userName
+    email: userName
   });
-  if(user.password == password){
+  if (user.password == password) {
     res.render("secrets.ejs");
   } else
     console.log("wrong password");
-  
+
 })
 
-  
+
 
 
 
