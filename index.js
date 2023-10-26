@@ -1,14 +1,30 @@
 //jshint esversion:6
 const express = require("express");
 const app = express();
+const session = require('express-session')
 const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
-const User_ = require("./mongod.js")
-const saltRounds = 1;
+const passport = require('passport');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 ;
+app.use(session({
+  secret:process.env['Mongo'],
+  resave: false,
+  saveUninitialized: false,
+}))
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+const User_ = require("./mongod.js");
+
+
+passport.use(User_.createStrategy());
+
+passport.serializeUser(User_.serializeUser());
+passport.deserializeUser(User_.deserializeUser());
+
 
 app.get("/", (req, res) => {
   res.render("home.ejs")
@@ -19,44 +35,58 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   res.render("login.ejs")
 })
-
-// level 1 
-app.post("/register", (req, res) => {
-  bcrypt.hash(req.body.password, saltRounds, async function(err, hash) {
-    if (err) return res.send(err)
-    const user = new User_({
-      email: req.body.username,
-      password: hash
-    });
-    await user.save();
-    res.render("secrets.ejs")
+app.get("/logout",(req,res)=>{
+  req.logout((err)=>{
+    if(err) return err;
+    res.redirect("/");
   });
-
-});
-app.post("/login",async(req,res)=>{
   
-    const username = req.body.username;
-    const password = req.body.password;
-    const user = await User_.findOne({email:username});
-bcrypt.compare(password,user.password, function(err, result) {
-    if(result == true){
-      res.render("secrets.ejs");
-      } if(err) 
-    console.log(err)
-});
-   
-});
+})
+
+app.get("/secrets",(req,res)=>{
+  if(req.isAuthenticated()) {
+    res.render("secrets.ejs")
+  } else {
+    res.render("login.ejs")
+  }
+})
+
 
 
   
 
 
 
+app.post('/register', async (req, res) => {
+  User_.register({username:req.body.username},req.body.password, function(err,user){
+    if(err) {
+      console.log(err)
+    } else {
+      passport.authenticate('local')(req,res, function(){
+        res.redirect("/secrets")
+      })
+    }
+  })
+});
+app.post('/login', async (req, res) => {
+ const user = new User_({
+   username:req.body.username,
+   password: req.body.password
+ })
+  req.login(user, function(err){
+    if(err){
+      console.log(err)
+    } else {
+      passport.authenticate('local')(req,res, function(){
+        res.redirect("/secrets")
+      })
+    }
+  })
+})
 
 
 
 
-
-
-
-app.listen("4000");
+app.listen("7500",()=>{
+  console.log("server is running");
+})
